@@ -1,0 +1,18 @@
+@charset "UTF-8";
+
+body{
+	background-color: white;
+	margin: 0;
+	margin-bottom: 40px;
+
+	
+}
+html {
+	min-height: 100%;
+	position: relative;
+}
+
+.lemon{
+	font-family: 'Oswald', sans-serif;
+	color:black;
+}
