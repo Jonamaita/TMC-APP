@@ -1,0 +1,1 @@
+web: gunicorn tmc_app.wsgi --log-file -

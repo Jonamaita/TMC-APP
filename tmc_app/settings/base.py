@@ -127,3 +127,4 @@ STATICFILES_DIRS = (
     # path del directorio de los archivos estaticos del proyecto
     os.path.join(BASE_DIR, 'static'),
 )
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
