@@ -22,3 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('apps.query_tmc.urls',namespace='query_tmc')),
 ]+static(settings.STATIC_URL,document_root=settings.STATIC_ROOT)
+
+handler404 = 'apps.views.handler404'
+handler500 = 'apps.views.handler500'
