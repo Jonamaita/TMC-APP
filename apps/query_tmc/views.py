@@ -13,8 +13,8 @@ class Index(View):
 		
 	def post(self,request):
 		form = TmcForm(request.POST)
+		context = dict()
 		if form.is_valid():
-			context = dict()
 			amount_uf = form.cleaned_data['amount_uf']
 			term_day = form.cleaned_data['term_day']
 			date_tmc = form.cleaned_data['date_tmc']
@@ -24,16 +24,16 @@ class Index(View):
 			response = get_data(year=date_tmc_year,month=date_tmc_month,day=date_tmc_day)
 			if response:
 				tmcs = get_tmcs(response,amount_uf=amount_uf,term_day=term_day)
-				context['tmcs'] = tmcs
-				context['date_request'] = date_tmc
-				context['tmcs_fecha'] = datetime.strptime(tmcs[0]['Fecha'],"%Y-%m-%d")
-				try:
-					context['tmcs_hasta'] = datetime.strptime(tmcs[0]['Hasta'],"%Y-%m-%d")
-				except KeyError:
-					context['tmcs_hasta'] = False
-				return render(request,"query_tmc/index.html",{'form':form,'data':context})
-			else:
-				context['error_response'] = True
-				return render(request,"query_tmc/index.html",{'form':form,'data':context})
-		else:
-			return render(request,"query_tmc/index.html",{'form':form})
+				if tmcs:
+					context['tmcs'] = tmcs
+					context['date_request'] = date_tmc
+					context['tmcs_fecha'] = datetime.strptime(tmcs[0]['Fecha'],"%Y-%m-%d")
+					try:
+						context['tmcs_hasta'] = datetime.strptime(tmcs[0]['Hasta'],"%Y-%m-%d")
+					except KeyError:
+						context['tmcs_hasta'] = False
+					return render(request,"query_tmc/index.html",{'form':form,'data':context})
+			
+			context['error_response'] = True
+		
+		return render(request,"query_tmc/index.html",{'form':form,'data':context})

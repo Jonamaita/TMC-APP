@@ -73,8 +73,10 @@ def get_tmcs(result:Dict,amount_uf:int,term_day:int) -> List:
 	tmcs = list()
 	type_operation = filter_tmcs(amount_uf,term_day)
 	for i in type_operation:
-		tmcs.append(next((date for date in result['TMCs'] if i == date['Tipo'])))
-	
+		for data in result['TMCs']:
+			if i == data['Tipo']:
+				tmcs.append(data)
+		
 	return tmcs
 	
 
@@ -121,13 +123,11 @@ def get_data(year:str,month:str,day:str) -> Dict:
 			response_code = f.getcode()
 			if response_code == 200:
 				response_data = f.read()
-				cont = json.loads(response_data)
-				return cont
+				data = json.loads(response_data)
+				return data
 			else:
 				return False
 	except Exception as er:
 		#if er.code:
 		#    error_message = f' HTTP status: {er.code}'    
 		return False
-
-	return response_data
