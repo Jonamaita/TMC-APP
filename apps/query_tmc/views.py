@@ -15,9 +15,13 @@ class Index(View):
 		form = TmcForm(request.POST)
 		context = dict()
 		if form.is_valid():
+			now = datetime.now().date()
 			amount_uf = form.cleaned_data['amount_uf']
 			term_day = form.cleaned_data['term_day']
 			date_tmc = form.cleaned_data['date_tmc']
+			context['date_request'] = date_tmc
+			if date_tmc > now:
+				date_tmc = now
 			date_tmc_month = date_tmc.strftime('%m')
 			date_tmc_day = date_tmc.strftime('%d')
 			date_tmc_year = date_tmc.strftime('%Y')
@@ -26,7 +30,6 @@ class Index(View):
 				tmcs = get_tmcs(response,amount_uf=amount_uf,term_day=term_day)
 				if tmcs:
 					context['tmcs'] = tmcs
-					context['date_request'] = date_tmc
 					context['tmcs_fecha'] = datetime.strptime(tmcs[0]['Fecha'],"%Y-%m-%d")
 					try:
 						context['tmcs_hasta'] = datetime.strptime(tmcs[0]['Hasta'],"%Y-%m-%d")
