@@ -23,6 +23,10 @@ def filter_tmcs(amount_uf:int,term_day:int) ->List:
 	type = 44 # 90 dias o mas e inferior o igual a 200 Uf y superior a 50 Uf
 	type = 45 # 90 dias o mas inferior o igual a 50 Uf
 
+	# Operaciones Expresadas en moneda extranjera
+	type = 41 # Operaciones expresadas en moneda extranjera Inferiores o iguales al equivalente de 2.000 unidades de fomento
+	type = 42 # Operaciones expresadas en moneda extranjera Superiores al equivalente de 2.000 unidades de fomento
+	
 	:param amount_uf: the amount in uf.
 	:param term_day: term in days.
 	:return: List with the type of operations corresponding to the days and amount.
@@ -73,45 +77,42 @@ def get_tmcs(result:Dict,amount_uf:int,term_day:int) -> List:
 	tmcs = list()
 	type_operation = filter_tmcs(amount_uf,term_day)
 	for i in type_operation:
-		for data in result['TMCs']:
+		for data in result:
 			if i == data['Tipo']:
 				tmcs.append(data)
 		
 	return tmcs
 	
 
-def check_date(data,year:str,month:str,day:str)->str:
+def check_date(data:Dict,year:str,month:str,day:str)->List:
 	"""
-	Check date that sent user.
+	Check the date of the data and compare the dates requested by the user.
 
+	:data: response of the api
 	:param year: year of TMC
 	:para mont: month of TMC
 	:para day: day of TMC
-	:return: the year and month as string
+	:return: List with the new_data
 	"""
 	now = datetime.now().date()
 	y = int(year)
 	m = int(month)
 	d = int(day)
 	user_date = date(y, m, d)
-	date_data = datetime.strptime(data['TMCs'][0]['Fecha'],"%Y-%m-%d")
-	date_data = datetime.date(date_data)
-	if date_data > user_date:
-		new_date = user_date - timedelta(days=14)
-		y,m = new_date.strftime('%Y'),new_date.strftime('%m')
-		base_url = f'https://api.sbif.cl/api-sbifv3/recursos_api/tmc/{y}/{m}?apikey=9c84db4d447c80c74961a72245371245cb7ac15f&formato=json'
+	new_data = list()
+	for i in data['TMCs']:
+		date_data = datetime.date(datetime.strptime(i['Fecha'],"%Y-%m-%d"))
 		try:
-			response = request.Request(base_url,method='GET')
-			with request.urlopen(response) as f:
-				response_code = f.getcode()
-				if response_code == 200:
-					response_data = f.read()
-					data = json.loads(response_data)
-					return data
-		except Exception as er:
-			return False
-	else:
-		return data
+			date_data_gte = datetime.date(datetime.strptime(i['Hasta'],"%Y-%m-%d"))
+			if date_data_gte >= user_date and date_data <= user_date:
+
+				new_data.append(i)
+		except KeyError:
+			if date_data <= user_date:
+
+				new_data.append(i)
+
+	return new_data
 		
 
 def get_data(year:str,month:str,day:str) -> Dict:
@@ -123,8 +124,14 @@ def get_data(year:str,month:str,day:str) -> Dict:
 	:para day: day of TMC
 	:return: Dictionary with the response data.
 	"""
+	if int(month) > 1:
+		month_lte = str(int(month)-1)
+		year_lte = year
+	else:
+		month_lte = '12'
+		year_lte = str(int(year)-1)
 	try:
-		base_url = f'https://api.sbif.cl/api-sbifv3/recursos_api/tmc/{year}/{month}?apikey=9c84db4d447c80c74961a72245371245cb7ac15f&formato=json'
+		base_url = f'https://api.sbif.cl/api-sbifv3/recursos_api/tmc/periodo/{year_lte}/{month_lte}/{year}/{month}?apikey=9c84db4d447c80c74961a72245371245cb7ac15f&formato=json'
 		response = request.Request(base_url,method='GET')
 		with request.urlopen(response) as f:
 			response_code = f.getcode()
