@@ -96,13 +96,27 @@ def check_date(year:str,month:str,day:str)->str:
 	user_date = date(y, m, d)
 	if user_date > now:
 		y,m = now.strftime('%Y'),now.strftime('%m')
-	elif d < 15:
-		new_date = user_date - timedelta(days=14)
-		y,m = new_date.strftime('%Y'),new_date.strftime('%m')
 	else:
-		y,m = year,month
-	
-	return y,m
+		base_url = f'https://api.sbif.cl/api-sbifv3/recursos_api/tmc/{year}/{month}?apikey=9c84db4d447c80c74961a72245371245cb7ac15f&formato=json'
+		try:
+			response = request.Request(base_url,method='GET')
+			with request.urlopen(response) as f:
+				response_code = f.getcode()
+				if response_code == 200:
+					response_data = f.read()
+					data = json.loads(response_data)
+					date_data = datetime.strptime(data['TMCs'][0]['Fecha'],"%Y-%m-%d")
+					if date_data.day > d:
+						new_date = user_date - timedelta(days=14)
+						y,m = new_date.strftime('%Y'),new_date.strftime('%m')
+						return [y,m]
+					else:
+
+						return [year,month]
+
+		except Exception as er:
+			return False
+	return [y,m]
 		
 
 def get_data(year:str,month:str,day:str) -> Dict:
@@ -114,20 +128,21 @@ def get_data(year:str,month:str,day:str) -> Dict:
 	:para day: day of TMC
 	:return: Dictionary with the response data.
 	"""
-
-	year,month = check_date(year=year,month=month,day=day)
-	base_url = f'https://api.sbif.cl/api-sbifv3/recursos_api/tmc/{year}/{month}?apikey=9c84db4d447c80c74961a72245371245cb7ac15f&formato=json'
-	try:
-		response = request.Request(base_url,method='GET')
-		with request.urlopen(response) as f:
-			response_code = f.getcode()
-			if response_code == 200:
-				response_data = f.read()
-				data = json.loads(response_data)
-				return data
-			else:
-				return False
-	except Exception as er:
-		#if er.code:
-		#    error_message = f' HTTP status: {er.code}'    
-		return False
+	result_check_date = check_date(year=year,month=month,day=day)
+	if result_check_date:
+		year,month = result_check_date
+		try:
+			base_url = f'https://api.sbif.cl/api-sbifv3/recursos_api/tmc/{year}/{month}?apikey=9c84db4d447c80c74961a72245371245cb7ac15f&formato=json'
+			response = request.Request(base_url,method='GET')
+			with request.urlopen(response) as f:
+				response_code = f.getcode()
+				if response_code == 200:
+					response_data = f.read()
+					data = json.loads(response_data)
+					return data
+				else:
+					return False
+		except Exception as er:
+			#if er.code:
+			#    error_message = f' HTTP status: {er.code}'    
+			return False
